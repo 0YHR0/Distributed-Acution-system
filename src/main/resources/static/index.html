@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to the auction</title>
+    <script src="http://cdn.bootcss.com/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://cdn.bootcss.com/sockjs-client/1.1.4/sockjs.min.js"></script>
+    <script>
+        var socket = new SockJS("http://localhost:8080/webSocketServer");
+        var stompClient = Stomp.over(socket);
+        window.onload = function () {
+            connect();
+        }
+        //subscribe the message
+        function subscribe() {
+            stompClient.subscribe('/topic/getmessage', function(response){
+                alert("the message you subscribe from the topic is: " + response);
+            });
+
+        }
+        //get the p2p messsage from the server
+        function subscribep2p() {
+            stompClient.subscribe('/user/point/ownmessage', function(response){
+                alert("the p2p message send by the server to you is: " + response);
+            });
+
+        }
+
+        function broadcast() {
+            stompClient.send("/app/broadcast", {},
+                JSON.stringify({ 'username': document.getElementById("username").value , 'price': parseInt(document.getElementById("price").value)}));
+        }
+        function sendp2p() {
+            stompClient.send("/app/p2p", {},
+                JSON.stringify({ 'username': document.getElementById("username").value , 'price': parseInt(document.getElementById("price").value)}));
+                // JSON.stringify({ 'name': 'test'}));
+        }
+        function connect() {
+            stompClient.connect({
+                    name: 'token' // token of the client
+                },
+                function connectCallback(frame) {
+                    alert("success");
+                    subscribe();
+                    subscribep2p();
+                },
+                function errorCallBack(error) {
+                    alert("error");
+                });
+        }
+        function disconnect() {
+            if (stompClient != null) {
+                stompClient.disconnect();
+            }
+            console.log("Disconnected");
+        }
+    </script>
+</head>
+<body>
+<h1>This page will automatically subscribe the topic</h1>
+username: <input type="text" id="username">
+price: <input type="number" id="price">
+<button onclick="broadcast();">send!</button>
+
+<h1>point to point</h1>
+<button onclick="sendp2p();">send!</button>
+
+</body>
+</html>
